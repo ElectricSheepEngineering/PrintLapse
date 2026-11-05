@@ -1,0 +1,26 @@
+# Paste this into Portainer: Stacks -> Add stack -> Web editor.
+#
+# Build the image on that Docker host first, from this project directory:
+#   docker build -t prusa-timelapse:latest .
+#
+# In the stack form, turn off "Pull latest image". Portainer would otherwise
+# look for this name on Docker Hub and the deploy would fail.
+#
+# Open http://<docker-host>:8765/ . There is no password.
+
+services:
+  prusa-timelapse:
+    image: prusa-timelapse:latest
+    container_name: prusa-timelapse
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      PRUSA_TIMELAPSE_DATA: /data
+      # TZ: America/Los_Angeles
+    volumes:
+      - prusa-timelapse:/data
+
+volumes:
+  prusa-timelapse:
+    name: prusa-timelapse

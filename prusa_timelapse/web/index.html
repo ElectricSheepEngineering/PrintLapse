@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Prusa Timelapse</title>
+  <link rel="icon" href="/favicon.svg">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #12110e;
+      --panel: #1c1a16;
+      --panel-2: #26231e;
+      --ink: #f4f0e6;
+      --muted: #a89f92;
+      --line: #3d362c;
+      --accent: #ff6a2c;
+      --accent-ink: #2a1208;
+      --accent-soft: #ffb088;
+      --good: #c6e29a;
+      --bad: #ff6d58;
+      --warn: #e7c26a;
+      --serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+      --sans: "Avenir Next", "Segoe UI", sans-serif;
+      --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.45;
+      border-top: 4px solid var(--accent);
+    }
+    button, input, select { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    ::selection { background: var(--accent); color: var(--accent-ink); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 22px 48px; }
+    header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 22px; }
+    .brand { display: flex; gap: 14px; align-items: flex-start; }
+    .brand svg { width: 36px; height: 36px; margin-top: 4px; flex: none; }
+    h1 { font-family: var(--serif); font-weight: 600; font-size: 34px; line-height: 1; margin: 0 0 6px; letter-spacing: -0.02em; }
+    h2 { font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0; }
+    .lede { margin: 0; color: var(--muted); max-width: 46rem; }
+    .pill { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; white-space: nowrap; }
+    .pill.good { color: var(--good); border-color: #415433; }
+    .pill.bad { color: var(--bad); border-color: #6a332c; }
+    .pill.warn { color: var(--warn); border-color: #6a5420; }
+    .banner { background: #3a2218; color: #ffd2c2; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+    main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr); gap: 18px; }
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+    fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0; }
+    label:first-child { margin-top: 0; }
+    input, select {
+      display: block; width: 100%; margin-top: 6px; background: #100e0c;
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .row input { margin-top: 0; }
+    .row span { color: var(--muted); white-space: nowrap; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid label { margin: 0; }
+    .hint { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+    code { font-family: var(--mono); font-size: 0.92em; background: var(--panel-2); padding: 1px 5px; border-radius: 5px; }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .presets button, button.ghost, a.ghost, button.primary, button.danger {
+      border-radius: 999px; padding: 8px 14px; border: 1px solid var(--line); background: transparent;
+    }
+    a.ghost { text-decoration: none; display: inline-flex; align-items: center; }
+    a.ghost[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
+    button.danger-text { color: var(--bad); }
+    .presets button.on { border-color: var(--accent); color: var(--accent-soft); }
+    .pace { min-height: 2.8em; }
+    .check { display: flex; gap: 8px; align-items: center; color: var(--ink); font-size: 15px; }
+    .check input { width: auto; margin: 0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+    button.danger { background: var(--bad); border-color: var(--bad); color: #2a0d0a; font-weight: 650; }
+    .error { color: var(--bad); min-height: 1.2em; margin: 10px 0 0; }
+    .preview { position: relative; aspect-ratio: 16 / 9; background: #0c0b09; border-radius: 12px; overflow: hidden; display: grid; place-items: center; }
+    .preview img { width: 100%; height: 100%; object-fit: contain; }
+    .placeholder { color: var(--muted); text-align: center; padding: 18px; max-width: 28rem; }
+    .badge { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; gap: 8px; background: rgba(12, 11, 9, 0.82); border-radius: 999px; padding: 5px 10px; font-size: 13px; }
+    .badge.capturing::before, .badge.testing::before, .badge.encoding::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    }
+    .badge.capturing::before { animation: pulse 1.4s infinite; }
+    .badge.idle::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6d675e; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 106, 44, 0.65); }
+      100% { box-shadow: 0 0 0 10px rgba(255, 106, 44, 0); }
+    }
+    .size { position: absolute; right: 10px; bottom: 10px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+    .stats div { background: var(--panel-2); border-radius: 10px; padding: 10px; }
+    .stats dt { color: var(--muted); font-size: 12px; }
+    .stats dd { margin: 4px 0 0; font-family: var(--mono); font-size: 18px; font-variant-numeric: tabular-nums; }
+    .message { margin: 12px 0 0; min-height: 1.4em; }
+    details { margin-top: 12px; }
+    summary { cursor: pointer; color: var(--muted); }
+    pre.log { max-height: 180px; overflow: auto; background: #100e0c; color: #cfc6b8; border-radius: 8px; padding: 10px; font-family: var(--mono); font-size: 12px; line-height: 1.45; white-space: pre-wrap; }
+    .sessions { margin-top: 22px; }
+    .section-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+    .section-head .hint { margin: 0; }
+    .session { display: block; }
+    .session-main { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--line); }
+    .session p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .session .actions { margin-top: 0; }
+    .manager { padding: 0 0 8px 0; }
+    .file-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--line); }
+    .file-row p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 10px; }
+    .thumbs a { display: block; background: #0c0b09; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; }
+    .thumbs img { width: 100%; height: 100%; object-fit: cover; }
+    .pager { margin-top: 8px; }
+    footer { margin-top: 22px; color: var(--muted); font-size: 13px; }
+    footer p { margin: 4px 0; }
+    @media (max-width: 860px) {
+      main, .grid, .stats { grid-template-columns: 1fr 1fr; }
+      main { grid-template-columns: 1fr; }
+      header { flex-direction: column; }
+      h1 { font-size: 28px; }
+    }
+    @media (max-width: 560px) { .grid, .stats { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="2" y="4" width="6" height="5" rx="1" fill="#ff6a2c"/>
+          <rect x="2" y="13.5" width="6" height="5" rx="1" fill="#ff6a2c"/>
+          <rect x="2" y="23" width="6" height="5" rx="1" fill="#ff6a2c"/>
+          <rect x="12" y="5" width="18" height="22" rx="2" fill="none" stroke="#f4f0e6" stroke-width="2"/>
+        </svg>
+        <div>
+          <h1>Prusa Timelapse</h1>
+          <p class="lede">Grab frames from a Buddy3D camera, or any other RTSP source, and turn them into a timelapse.</p>
+        </div>
+      </div>
+      <div class="pill" id="ffmpegPill">Checking ffmpeg…</div>
+    </header>
+    <p class="banner" id="ffmpegHint" hidden></p>
+    <main>
+      <section class="panel">
+        <fieldset id="fields">
+          <label>RTSP URL
+            <input id="url" type="text" spellcheck="false" autocomplete="off" placeholder="rtsp://192.168.1.42/live">
+          </label>
+          <p class="hint">Buddy3D camera: in the Prusa app, open the printer, then Camera, and turn on “RTSP stream on local network”. Use the camera’s IP, not the printer’s. The path is <code>/live</code>. Close VLC and the app’s live view first. The camera often allows only one RTSP client.</p>
+          <div class="grid">
+            <label>Frame every
+              <span class="row"><input id="interval" type="number" min="0.1" max="3600" step="0.1" value="10"><span>seconds</span></span>
+            </label>
+            <label>Timelapse plays at
+              <span class="row"><input id="fps" type="number" min="1" max="120" step="1" value="30"><span>fps</span></span>
+            </label>
+          </div>
+          <div class="presets" id="presets">
+            <button type="button" data-seconds="1">1s</button>
+            <button type="button" data-seconds="5">5s</button>
+            <button type="button" data-seconds="10">10s</button>
+            <button type="button" data-seconds="30">30s</button>
+            <button type="button" data-seconds="60">60s</button>
+          </div>
+          <p class="hint pace" id="pace"></p>
+          <div class="grid">
+            <label>JPEG quality
+              <select id="quality">
+                <option value="2">Best, larger files</option>
+                <option value="3" selected>High</option>
+                <option value="5">Medium</option>
+                <option value="8">Small files</option>
+              </select>
+            </label>
+            <label>Frame width
+              <select id="width">
+                <option value="0" selected>Original</option>
+                <option value="1920">1920</option>
+                <option value="1280">1280</option>
+                <option value="640">640</option>
+              </select>
+            </label>
+          </div>
+          <label>Save sessions to
+            <input id="output" type="text" spellcheck="false" autocomplete="off" placeholder="">
+          </label>
+          <p class="hint" id="outputHint" hidden>Leave this blank to keep sessions on the attached volume. A path outside that volume disappears when the container is replaced.</p>
+          <div class="grid">
+            <label>Session name
+              <input id="name" type="text" maxlength="80" placeholder="Blank uses the date and time" autocomplete="off">
+            </label>
+            <label>Stop after
+              <span class="row"><input id="duration" type="number" min="0" max="20160" step="1" value="0"><span>minutes</span></span>
+            </label>
+          </div>
+          <label>RTSP transport
+            <select id="transport">
+              <option value="tcp" selected>TCP, more reliable</option>
+              <option value="udp">UDP</option>
+            </select>
+          </label>
+          <label class="check"><input id="autoEncode" type="checkbox" checked> Build the video when capture stops</label>
+          <label class="check"><input id="keepFrames" type="checkbox" checked> Keep the JPEG frames so the video can be rebuilt at another frame rate</label>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="ghost" id="testBtn">Test connection</button>
+          <button type="button" class="primary" id="startBtn">Start capture</button>
+        </div>
+        <p class="error" id="error" hidden></p>
+      </section>
+      <section class="panel">
+        <div class="preview">
+          <img id="preview" alt="Latest captured frame" hidden>
+          <div class="placeholder" id="placeholder">No frame yet. Test the connection, or start a capture. The newest frame stays here.</div>
+          <div class="badge idle" id="badge">Idle</div>
+          <div class="size" id="size"></div>
+        </div>
+        <dl class="stats">
+          <div><dt>Frames</dt><dd id="statFrames">0</dd></div>
+          <div><dt>Elapsed</dt><dd id="statElapsed">0:00</dd></div>
+          <div><dt>Video</dt><dd id="statVideo">0:00</dd></div>
+          <div><dt>Reconnects</dt><dd id="statReconnects">0</dd></div>
+        </dl>
+        <p class="message" id="message" aria-live="polite"></p>
+        <div class="actions">
+          <button type="button" class="ghost" id="openBtn" disabled>Show folder</button>
+          <button type="button" class="ghost" id="playBtn" disabled>Play video</button>
+          <a class="ghost" id="downloadVideo" hidden>Download video</a>
+          <a class="ghost" id="downloadFrames" hidden>Download frames</a>
+          <a class="ghost" id="downloadAll" hidden>Frames + video</a>
+          <button type="button" class="ghost" id="encodeBtn" disabled>Rebuild video</button>
+        </div>
+        <details id="logDetails">
+          <summary>Log</summary>
+          <pre class="log" id="log"></pre>
+        </details>
+      </section>
+    </main>
+    <section class="sessions">
+      <div class="section-head">
+        <h2>Saved files</h2>
+        <p class="hint" id="libraryUsage"></p>
+      </div>
+      <div id="sessions"></div>
+    </section>
+    <footer>
+      <p id="runtimeNote">Leave the terminal window open while a capture is running. Closing the browser does not stop it.</p>
+      <p id="settingsPath"></p>
+    </footer>
+  </div>
+  <noscript><p class="wrap">This page needs JavaScript.</p></noscript>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let saveTimer = 0;
+    let acting = false;
+    let refreshing = false;
+    let shownRev = 0;
+    let lastPhase = "idle";
+    let lastStatus = { phase: "idle", preview_rev: 0, frames: 0, session_name: null };
+    let localError = "";
+    let openedLogForError = false;
+    let containerMode = false;
+    let openManager = "";
+    let managerOffset = 0;
+    const PAGE = 12;
+
+    function trim(number) {
+      const rounded = Math.round(number * 100) / 100;
+      return String(rounded);
+    }
+    function formatClock(seconds) {
+      const whole = Math.max(0, Math.floor(seconds));
+      const hours = Math.floor(whole / 3600);
+      const minutes = Math.floor((whole % 3600) / 60);
+      const secs = whole % 60;
+      if (hours) return hours + ":" + String(minutes).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+      return minutes + ":" + String(secs).padStart(2, "0");
+    }
+    function formatDuration(seconds) {
+      if (!Number.isFinite(seconds)) return "—";
+      if (seconds < 60) return trim(seconds) + "s";
+      const minutes = Math.floor(seconds / 60);
+      const rest = Math.round(seconds % 60);
+      if (minutes < 60) return rest ? minutes + "m " + rest + "s" : minutes + "m";
+      const hours = Math.floor(minutes / 60);
+      const min = minutes % 60;
+      return min ? hours + "h " + min + "m" : hours + "h";
+    }
+    function inspectForm() {
+      const intervalText = $("interval").value.trim();
+      const interval = Number(intervalText);
+      const fps = Number($("fps").value);
+      const durationText = $("duration").value.trim();
+      const minutes = durationText === "" ? 0 : Number(durationText);
+      if (!intervalText || !Number.isFinite(interval)) return { error: "Enter how many seconds between frames." };
+      if (interval < 0.1 || interval > 3600) return { error: "Frame interval must be between 0.1 and 3600 seconds." };
+      if (!Number.isInteger(fps) || fps < 1 || fps > 120) return { error: "Timelapse frame rate must be a whole number from 1 to 120." };
+      if (!Number.isFinite(minutes) || minutes < 0 || minutes > 20160) return { error: "Stop after must be between 0 and 20160 minutes." };
+      return {
+        error: "",
+        settings: {
+          url: $("url").value.trim(),
+          interval_s: interval,
+          video_fps: fps,
+          quality: Number($("quality").value),
+          max_width: Number($("width").value),
+          output_dir: $("output").value.trim(),
+          session_name: $("name").value.trim(),
+          max_duration_min: minutes,
+          transport: $("transport").value,
+          auto_encode: $("autoEncode").checked,
+          keep_frames: $("keepFrames").checked
+        }
+      };
+    }
+    function updatePace() {
+      const inspected = inspectForm();
+      if (!inspected.settings) {
+        $("pace").textContent = inspected.error;
+        return;
+      }
+      const interval = inspected.settings.interval_s;
+      const fps = inspected.settings.video_fps;
+      const speed = interval * fps;
+      $("pace").textContent = trim(interval) + " seconds between frames at " + fps + " fps is " + trim(speed) + "× realtime. One hour of printing becomes " + formatDuration(3600 / speed) + " of video.";
+      document.querySelectorAll("[data-seconds]").forEach((button) => {
+        button.classList.toggle("on", Number(button.dataset.seconds) === interval);
+      });
+    }
+    function applySettings(settings) {
+      $("url").value = settings.url || "";
+      $("interval").value = settings.interval_s;
+      $("fps").value = settings.video_fps;
+      $("quality").value = String(settings.quality);
+      $("width").value = String(settings.max_width);
+      $("output").value = settings.output_dir || "";
+      $("name").value = settings.session_name || "";
+      $("duration").value = settings.max_duration_min;
+      $("transport").value = settings.transport || "tcp";
+      $("autoEncode").checked = !!settings.auto_encode;
+      $("keepFrames").checked = !!settings.keep_frames;
+      updatePace();
+    }
+    function showLocalError(text) {
+      localError = text || "";
+      paintError();
+    }
+    function paintError() {
+      const text = localError || lastStatus.last_error || "";
+      const el = $("error");
+      el.hidden = !text;
+      el.textContent = text;
+    }
+    async function api(method, url, body) {
+      const options = { method, headers: {} };
+      if (body !== undefined) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(body);
+      }
+      try {
+        const response = await fetch(url, options);
+        const data = await response.json().catch(() => ({}));
+        return { ok: response.ok, status: response.status, data };
+      } catch (err) {
+        return { ok: false, status: 0, data: { error: "Lost the connection to the app. If the terminal or container stopped, the capture stopped with it." } };
+      }
+    }
+    function renderFfmpeg(info) {
+      const pill = $("ffmpegPill");
+      const hint = $("ffmpegHint");
+      if (!info || !info.available) {
+        pill.textContent = "ffmpeg missing";
+        pill.className = "pill bad";
+        pill.title = info && info.hint ? info.hint : "";
+        hint.hidden = false;
+        hint.textContent = (info && info.hint) || "Install ffmpeg, then start this app again.";
+        return;
+      }
+      pill.textContent = info.libx264 ? "ffmpeg ready" : "ffmpeg has no libx264";
+      pill.className = info.libx264 ? "pill good" : "pill warn";
+      pill.title = info.version || info.path || "";
+      hint.hidden = !!info.libx264;
+      if (!info.libx264) hint.textContent = "This ffmpeg cannot build an H.264 video. Install a full ffmpeg build.";
+    }
+    function renderStatus(status) {
+      lastStatus = status;
+      const phase = status.phase || "idle";
+      const labels = { idle: "Idle", testing: "Connecting", capturing: "Capturing", encoding: "Encoding" };
+      const badge = $("badge");
+      badge.textContent = labels[phase] || phase;
+      badge.className = "badge " + phase;
+      $("statFrames").textContent = String(status.frames || 0);
+      $("statElapsed").textContent = formatClock(status.elapsed_s || 0);
+      $("statVideo").textContent = formatClock(status.video_seconds || 0);
+      $("statReconnects").textContent = String(status.reconnects || 0);
+      $("message").textContent = status.message || "";
+      $("size").textContent = status.width && status.height ? status.width + "×" + status.height : "";
+      $("fields").disabled = phase !== "idle";
+      const start = $("startBtn");
+      const test = $("testBtn");
+      test.disabled = phase !== "idle" || acting;
+      test.textContent = phase === "testing" ? "Testing…" : "Test connection";
+      if (phase === "capturing") {
+        start.textContent = $("autoEncode").checked ? "Stop and build video" : "Stop capture";
+        start.className = "danger";
+        start.disabled = acting;
+      } else if (phase === "encoding") {
+        start.textContent = "Encoding…";
+        start.className = "primary";
+        start.disabled = true;
+      } else if (phase === "testing") {
+        start.textContent = "Start capture";
+        start.className = "primary";
+        start.disabled = true;
+      } else {
+        start.textContent = "Start capture";
+        start.className = "primary";
+        start.disabled = acting;
+      }
+      const sessionName = status.session_name;
+      $("openBtn").hidden = containerMode;
+      $("openBtn").disabled = containerMode || !sessionName;
+      $("playBtn").disabled = !status.video_path;
+      $("encodeBtn").disabled = phase !== "idle" || !sessionName || !(status.frames > 0);
+      const hasFrames = (status.frames || 0) > 0;
+      // After a capture that deletes frames, the counter still shows how many
+      // were taken. The session list knows which files are actually on disk.
+      const framesKept = $("keepFrames").checked || phase !== "idle";
+      $("downloadFrames").hidden = !sessionName || !hasFrames || !framesKept;
+      $("downloadVideo").hidden = !status.video_path;
+      $("downloadAll").hidden = !sessionName || ((!hasFrames || !framesKept) && !status.video_path);
+      if (sessionName) {
+        $("downloadFrames").href = sessionFileUrl(sessionName, "frames.zip");
+        $("downloadVideo").href = sessionFileUrl(sessionName, "video?download=1");
+        $("downloadAll").href = sessionFileUrl(sessionName, "archive.zip");
+      }
+      if (status.preview_rev && status.preview_rev !== shownRev) {
+        shownRev = status.preview_rev;
+        const img = $("preview");
+        img.src = "/preview.jpg?rev=" + shownRev;
+        img.hidden = false;
+        $("placeholder").hidden = true;
+      }
+      if (phase === "capturing") document.title = "(" + (status.frames || 0) + ") Prusa Timelapse";
+      else if (phase === "encoding") document.title = "Encoding… Prusa Timelapse";
+      else document.title = "Prusa Timelapse";
+      if (status.last_error && !openedLogForError) {
+        $("logDetails").open = true;
+        openedLogForError = true;
+      }
+      if (!status.last_error) openedLogForError = false;
+      paintError();
+      if (lastPhase !== "idle" && phase === "idle") loadSessions();
+      lastPhase = phase;
+    }
+    function renderLog(lines) {
+      const el = $("log");
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+      el.textContent = (lines || []).join("\n");
+      if (nearBottom) el.scrollTop = el.scrollHeight;
+    }
+    function formatBytes(bytes) {
+      const size = Number(bytes);
+      if (!Number.isFinite(size) || size < 0) return "";
+      if (size < 1024) return size + " B";
+      const units = ["KB", "MB", "GB", "TB"];
+      let value = size / 1024;
+      let unit = 0;
+      while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit += 1;
+      }
+      const shown = value >= 10 ? value.toFixed(0) : value.toFixed(1);
+      return shown + " " + units[unit];
+    }
+    function sessionFileUrl(name, leaf) {
+      return "/api/sessions/" + encodeURIComponent(name) + "/" + leaf;
+    }
+    function rowIsActive(row) {
+      const phase = lastStatus.phase;
+      return (phase === "capturing" || phase === "encoding") && lastStatus.session_name === row.name;
+    }
+    function renderLibrarySummary(rows) {
+      const folder = $("output").value.trim() || $("output").placeholder || "";
+      const list = rows || [];
+      const used = list.reduce((sum, row) => sum + (row.frames_bytes || 0) + (row.video_bytes || 0), 0);
+      const bits = [];
+      if (folder) bits.push(folder);
+      if (list.length) bits.push(list.length + (list.length === 1 ? " session" : " sessions"));
+      if (used) bits.push(formatBytes(used));
+      $("libraryUsage").textContent = bits.join(" · ");
+    }
+    function renderSessions(rows) {
+      const root = $("sessions");
+      const list = rows || [];
+      renderLibrarySummary(list);
+      root.replaceChildren();
+      if (!list.length) {
+        openManager = "";
+        const empty = document.createElement("p");
+        empty.className = "hint";
+        empty.textContent = "No sessions in this folder yet.";
+        root.appendChild(empty);
+        return;
+      }
+      if (openManager && !list.some((row) => row.name === openManager)) openManager = "";
+      const jobRunning = lastStatus.phase && lastStatus.phase !== "idle";
+      list.forEach((row) => {
+        const active = rowIsActive(row);
+        const encodingThis = active && lastStatus.phase === "encoding";
+        const storedFrames = row.frames || 0;
+        const framesOnDisk = row.frame_files || 0;
+        const item = document.createElement("div");
+        item.className = "session";
+        const main = document.createElement("div");
+        main.className = "session-main";
+        const text = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = row.name;
+        const detail = document.createElement("p");
+        const bits = [storedFrames + " frames"];
+        if (framesOnDisk && row.frames_bytes) bits.push(formatBytes(row.frames_bytes));
+        if (row.interval_s) bits.push("every " + trim(row.interval_s) + "s");
+        if (row.has_video) bits.push("video " + formatBytes(row.video_bytes || 0));
+        detail.textContent = bits.join(" · ");
+        text.append(title, detail);
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        if (!containerMode) {
+          actions.append(smallButton("Show folder", false, () => act("/api/open", { session: row.name, target: "folder" })));
+        }
+        actions.append(
+          linkButton("Play", !row.has_video || encodingThis, sessionFileUrl(row.name, "video"), true),
+          linkButton("Video", !row.has_video || encodingThis, sessionFileUrl(row.name, "video?download=1"), false),
+          linkButton("Frames zip", framesOnDisk <= 0, sessionFileUrl(row.name, "frames.zip"), false),
+          linkButton("Frames + video", framesOnDisk <= 0 && !row.has_video, sessionFileUrl(row.name, "archive.zip"), false),
+          smallButton(openManager === row.name ? "Hide files" : "Files", false, () => toggleManager(row.name)),
+          smallButton("Rebuild", jobRunning || !row.frames_on_disk, () => rebuild(row.name)),
+          smallButton("Delete", active, () => deleteStored(row.name, "session"), true)
+        );
+        main.append(text, actions);
+        item.appendChild(main);
+        if (openManager === row.name) {
+          const panel = document.createElement("div");
+          panel.className = "manager";
+          panel.dataset.session = row.name;
+          const pending = document.createElement("p");
+          pending.className = "hint";
+          pending.textContent = "Reading files…";
+          panel.appendChild(pending);
+          item.appendChild(panel);
+          loadManager(row.name, panel);
+        }
+        root.appendChild(item);
+      });
+    }
+    function smallButton(label, disabled, onClick, danger) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = danger ? "ghost danger-text" : "ghost";
+      button.textContent = label;
+      button.disabled = !!disabled;
+      button.addEventListener("click", onClick);
+      return button;
+    }
+    function linkButton(label, disabled, href, newTab) {
+      const link = document.createElement("a");
+      link.className = "ghost";
+      link.textContent = label;
+      if (disabled) {
+        link.setAttribute("aria-disabled", "true");
+        link.tabIndex = -1;
+      } else {
+        link.href = href;
+        if (newTab) {
+          link.target = "_blank";
+          link.rel = "noopener";
+        }
+      }
+      return link;
+    }
+    function toggleManager(name) {
+      if (openManager === name) openManager = "";
+      else {
+        openManager = name;
+        managerOffset = 0;
+      }
+      loadSessions();
+    }
+    function fileRow(title, detail, actions) {
+      const row = document.createElement("div");
+      row.className = "file-row";
+      const text = document.createElement("div");
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const info = document.createElement("p");
+      info.textContent = detail;
+      text.append(heading, info);
+      const buttons = document.createElement("div");
+      buttons.className = "actions";
+      actions.forEach((node) => buttons.appendChild(node));
+      row.append(text, buttons);
+      return row;
+    }
+    async function loadManager(name, panel) {
+      const result = await api("GET", "/api/sessions/" + encodeURIComponent(name) + "?offset=" + managerOffset + "&limit=" + PAGE);
+      if (!panel.isConnected || panel.dataset.session !== name) return;
+      panel.replaceChildren();
+      if (!result.ok) {
+        const error = document.createElement("p");
+        error.className = "error";
+        error.textContent = result.data.error || "Could not read that session.";
+        panel.appendChild(error);
+        return;
+      }
+      const data = result.data;
+      const active = rowIsActive({ name: name });
+      const encodingThis = active && lastStatus.phase === "encoding";
+      panel.appendChild(fileRow(
+        "timelapse.mp4",
+        data.has_video ? formatBytes(data.video_bytes) : "No video yet",
+        [
+          linkButton("Download", !data.has_video || encodingThis, sessionFileUrl(name, "video?download=1"), false),
+          smallButton("Delete", !data.has_video || active, () => deleteStored(name, "video"), true)
+        ]
+      ));
+      panel.appendChild(fileRow(
+        "frames",
+        (data.frame_files || 0) + " images · " + formatBytes(data.frames_bytes || 0),
+        [
+          linkButton("Download zip", !(data.frame_files > 0), sessionFileUrl(name, "frames.zip"), false),
+          smallButton("Delete", !(data.frame_files > 0) || active, () => deleteStored(name, "frames"), true)
+        ]
+      ));
+      (data.others || []).forEach((file) => {
+        if (file.name !== "latest.jpg") return;
+        const link = document.createElement("a");
+        link.href = sessionFileUrl(name, "latest.jpg");
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "latest.jpg · " + formatBytes(file.bytes);
+        const line = document.createElement("p");
+        line.className = "hint";
+        line.appendChild(link);
+        panel.appendChild(line);
+      });
+      const page = data.frames_page || { files: [], offset: 0, total: 0, limit: PAGE };
+      if (page.files && page.files.length) {
+        const grid = document.createElement("div");
+        grid.className = "thumbs";
+        page.files.forEach((file) => {
+          const link = document.createElement("a");
+          link.href = sessionFileUrl(name, "frames/" + encodeURIComponent(file.name));
+          link.target = "_blank";
+          link.rel = "noopener";
+          const img = document.createElement("img");
+          img.alt = file.name;
+          img.src = link.href;
+          link.appendChild(img);
+          grid.appendChild(link);
+        });
+        panel.appendChild(grid);
+      }
+      if ((page.total || 0) > PAGE) {
+        const pager = document.createElement("div");
+        pager.className = "actions pager";
+        const shownFrom = (page.offset || 0) + 1;
+        const shownTo = (page.offset || 0) + ((page.files || []).length);
+        const label = document.createElement("span");
+        label.className = "hint";
+        label.textContent = shownFrom + "–" + shownTo + " of " + page.total;
+        pager.append(
+          smallButton("Previous", (page.offset || 0) <= 0, () => {
+            managerOffset = Math.max(0, (page.offset || 0) - PAGE);
+            loadSessions();
+          }),
+          label,
+          smallButton("Next", (page.offset || 0) + PAGE >= page.total, () => {
+            managerOffset = (page.offset || 0) + PAGE;
+            loadSessions();
+          })
+        );
+        panel.appendChild(pager);
+      }
+    }
+    async function deleteStored(name, target) {
+      const prompts = {
+        session: "Delete this session, including its frames and video?",
+        frames: "Delete every frame image in this session? The video stays.",
+        video: "Delete the video? The frames stay, so you can rebuild it."
+      };
+      if (!window.confirm(prompts[target] || "Delete these files?")) return;
+      const result = await api("DELETE", "/api/sessions/" + encodeURIComponent(name) + "?target=" + encodeURIComponent(target));
+      if (!result.ok) {
+        showLocalError(result.data.error || "Could not delete that.");
+        return;
+      }
+      if (target === "session") openManager = "";
+      await loadSessions();
+    }
+    async function loadSessions() {
+      const result = await api("GET", "/api/sessions");
+      if (result.ok) renderSessions(result.data.sessions || []);
+    }
+    async function loadLog() {
+      const result = await api("GET", "/api/log");
+      if (result.ok) renderLog(result.data.lines || []);
+    }
+    async function refresh() {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        const result = await api("GET", "/api/status");
+        if (!result.ok) {
+          if (result.data.error) showLocalError(result.data.error);
+          return;
+        }
+        const shouldLog = result.data.phase !== "idle" || lastPhase !== "idle";
+        renderStatus(result.data);
+        if (shouldLog) await loadLog();
+      } finally {
+        refreshing = false;
+      }
+    }
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        const inspected = inspectForm();
+        if (!inspected.settings || $("fields").disabled) return;
+        const result = await api("PUT", "/api/settings", inspected.settings);
+        if (!result.ok) showLocalError(result.data.error || "Could not save settings.");
+      }, 400);
+    }
+    async function act(url, body) {
+      if (acting) return;
+      acting = true;
+      showLocalError("");
+      const result = await api("POST", url, body);
+      acting = false;
+      if (!result.ok) showLocalError(result.data.error || "Request failed.");
+      else if (result.data.phase) renderStatus(result.data);
+      await refresh();
+    }
+    async function startCapture() {
+      const inspected = inspectForm();
+      if (!inspected.settings) {
+        showLocalError(inspected.error);
+        return;
+      }
+      if (!inspected.settings.url) {
+        showLocalError("Enter an RTSP URL, such as rtsp://192.168.1.10/live.");
+        return;
+      }
+      if (!/^rtsps?:\/\//i.test(inspected.settings.url)) {
+        showLocalError("URL must start with rtsp:// or rtsps://.");
+        return;
+      }
+      await act("/api/start", inspected.settings);
+    }
+    async function stopCapture() {
+      await act("/api/stop", {});
+    }
+    async function rebuild(name) {
+      const inspected = inspectForm();
+      const fps = inspected.settings ? inspected.settings.video_fps : 30;
+      await act("/api/encode", { session: name || lastStatus.session_name, fps });
+    }
+    $("startBtn").addEventListener("click", () => {
+      if (lastStatus.phase === "capturing") stopCapture();
+      else startCapture();
+    });
+    $("testBtn").addEventListener("click", () => {
+      const inspected = inspectForm();
+      if (!inspected.settings) {
+        showLocalError(inspected.error);
+        return;
+      }
+      if (!inspected.settings.url) {
+        showLocalError("Enter an RTSP URL, such as rtsp://192.168.1.10/live.");
+        return;
+      }
+      act("/api/test", inspected.settings);
+    });
+    $("openBtn").addEventListener("click", () => {
+      if (lastStatus.session_name) act("/api/open", { session: lastStatus.session_name, target: "folder" });
+    });
+    $("playBtn").addEventListener("click", () => {
+      if (!lastStatus.session_name || !lastStatus.video_path) return;
+      window.open(sessionFileUrl(lastStatus.session_name, "video"), "_blank", "noopener");
+    });
+    $("encodeBtn").addEventListener("click", () => rebuild(lastStatus.session_name));
+    $("fields").addEventListener("input", () => { updatePace(); scheduleSave(); });
+    $("fields").addEventListener("change", () => { updatePace(); scheduleSave(); });
+    document.querySelectorAll("[data-seconds]").forEach((button) => {
+      button.addEventListener("click", () => {
+        $("interval").value = button.dataset.seconds;
+        updatePace();
+        scheduleSave();
+      });
+    });
+    $("preview").addEventListener("error", () => {
+      $("preview").hidden = true;
+      $("placeholder").hidden = false;
+    });
+    async function boot() {
+      const result = await api("GET", "/api/bootstrap");
+      if (!result.ok) {
+        showLocalError(result.data.error || "Could not load the app.");
+        return;
+      }
+      containerMode = !!result.data.container;
+      $("outputHint").hidden = !containerMode;
+      if (containerMode) {
+        $("runtimeNote").textContent = "Running in Docker. Sessions and settings are on the attached volume. Closing this page does not stop a capture. Stopping the container does.";
+      }
+      $("output").placeholder = result.data.default_output_dir || "";
+      applySettings(result.data.settings || {});
+      renderFfmpeg(result.data.ffmpeg || {});
+      renderStatus(result.data.status || { phase: "idle" });
+      renderSessions(result.data.sessions || []);
+      const settingsPath = result.data.settings_path || "";
+      $("settingsPath").textContent = settingsPath ? "Settings file: " + settingsPath : "";
+      if ((result.data.status || {}).phase !== "idle") loadLog();
+      setInterval(refresh, 1000);
+    }
+    boot();
+  </script>
+</body>
+</html>

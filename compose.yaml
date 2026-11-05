@@ -1,4 +1,4 @@
-# Prusa Timelapse
+# PrintLapse
 #
 # From this directory:
 #   docker compose up -d --build
@@ -7,25 +7,25 @@
 # The host port is the one you open in a browser. The app listens on 8765.
 
 services:
-  prusa-timelapse:
-    image: prusa-timelapse:latest
+  printlapse:
+    image: printlapse:latest
     build: .
-    container_name: prusa-timelapse
+    container_name: printlapse
     restart: unless-stopped
     ports:
       - "8765:8765"
     environment:
-      PRUSA_TIMELAPSE_DATA: /data
+      PRINTLAPSE_DATA: /data
       # Session folder names use this clock. Uncomment and set a zone if the
       # container's UTC clock is confusing.
       # TZ: America/Los_Angeles
     volumes:
-      - prusa-timelapse:/data
+      - printlapse:/data
     # Linux only. Use this when the container cannot open the camera on your
     # LAN, and delete the ports section above. Host networking is not
     # available on Docker Desktop for Mac or Windows.
     # network_mode: host
 
 volumes:
-  prusa-timelapse:
-    name: prusa-timelapse
+  printlapse:
+    name: printlapse

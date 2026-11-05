@@ -1,1 +1,1 @@
-"""Tests for prusa-timelapse."""
+"""Tests for printlapse."""

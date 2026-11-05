@@ -11,8 +11,8 @@ import shutil
 import zipfile
 from pathlib import Path
 
-from prusa_timelapse.capture import resolve_session
-from prusa_timelapse.ffmpeg_util import is_complete_jpeg
+from printlapse.capture import resolve_session
+from printlapse.ffmpeg_util import is_complete_jpeg
 
 
 FRAME_FILE_NAME = re.compile(r"^frame_\d{6}\.jpg$")

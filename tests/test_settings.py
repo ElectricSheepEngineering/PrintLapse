@@ -11,8 +11,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prusa_timelapse.capture import allocate_session_dir
-from prusa_timelapse.settings import (
+from printlapse.capture import allocate_session_dir
+from printlapse.settings import (
     SettingsStore,
     app_config_dir,
     data_root,
@@ -63,7 +63,7 @@ class SettingsTests(unittest.TestCase):
     def test_data_dir_env_keeps_settings_and_sessions_on_one_volume(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
-            with Env(PRUSA_TIMELAPSE_DATA=str(root)):
+            with Env(PRINTLAPSE_DATA=str(root)):
                 self.assertEqual(data_root(), root)
                 self.assertEqual(app_config_dir(), root / "config")
                 self.assertEqual(default_output_dir(), root / "timelapses")

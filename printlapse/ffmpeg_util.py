@@ -38,10 +38,10 @@ def install_hint() -> str:
 def find_ffmpeg() -> str | None:
     """Return an executable ffmpeg path, or None.
 
-    PRUSA_TIMELAPSE_FFMPEG overrides PATH so a portable build can be used
+    PRINTLAPSE_FFMPEG overrides PATH so a portable build can be used
     without installing it system-wide.
     """
-    override = os.environ.get("PRUSA_TIMELAPSE_FFMPEG", "").strip()
+    override = os.environ.get("PRINTLAPSE_FFMPEG", "").strip()
     if override:
         path = Path(override)
         if path.is_file() and os.access(path, os.X_OK):

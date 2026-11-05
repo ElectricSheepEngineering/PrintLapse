@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from prusa_timelapse.ffmpeg_util import (
+from printlapse.ffmpeg_util import (
     build_capture_args,
     build_encode_args,
     build_snapshot_args,
@@ -36,7 +36,7 @@ from prusa_timelapse.ffmpeg_util import (
     stop_process,
     validate_rtsp_url,
 )
-from prusa_timelapse.settings import (
+from printlapse.settings import (
     expand_output_dir,
     sanitize_session_name,
 )
@@ -100,7 +100,7 @@ class CaptureService:
         self._retry_delay = retry_delay
         self._stall_grace = stall_grace
         self._snapshot_timeout = snapshot_timeout
-        self._preview_dir = preview_dir or Path(tempfile.gettempdir()) / "prusa-timelapse"
+        self._preview_dir = preview_dir or Path(tempfile.gettempdir()) / "printlapse"
         self._preview_dir.mkdir(parents=True, exist_ok=True)
         self._preview_file = self._preview_dir / "preview.jpg"
 
@@ -192,7 +192,7 @@ class CaptureService:
         if not info["available"] or not self.ffmpeg:
             raise ValueError(info.get("hint") or "ffmpeg is not installed.")
         self._begin("testing", "Connecting to the camera.", last_error=None)
-        self._start_worker("prusa-timelapse-test", self._run_test, (url, transport, quality, max_width))
+        self._start_worker("printlapse-test", self._run_test, (url, transport, quality, max_width))
 
     def start(self, config: CaptureConfig) -> None:
         self._require_ffmpeg()
@@ -211,7 +211,7 @@ class CaptureService:
             video_fps=config.video_fps,
             output_dir=config.output_dir,
         )
-        self._start_worker("prusa-timelapse-capture", self._run_capture, (config, session_dir))
+        self._start_worker("printlapse-capture", self._run_capture, (config, session_dir))
 
     def encode_session(self, session_dir: Path, fps: int) -> None:
         self._require_ffmpeg()
@@ -226,7 +226,7 @@ class CaptureService:
             last_error=None,
         )
         self._start_worker(
-            "prusa-timelapse-encode",
+            "printlapse-encode",
             self._run_encode,
             (session_dir, fps, False),
         )
@@ -659,7 +659,7 @@ def contiguous_frame_count(frames_dir: Path) -> int:
 
 def list_sessions(root: Path) -> list[dict]:
     # Imported here so library.py can import resolve_session without a cycle.
-    from prusa_timelapse.library import SESSION_LIST_LIMIT, summarize_frames
+    from printlapse.library import SESSION_LIST_LIMIT, summarize_frames
 
     if not root.is_dir():
         return []

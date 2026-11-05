@@ -11,9 +11,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prusa_timelapse.capture import CaptureService, config_from_dict
-from prusa_timelapse.ffmpeg_util import is_complete_jpeg
-from prusa_timelapse.settings import normalize_settings
+from printlapse.capture import CaptureService, config_from_dict
+from printlapse.ffmpeg_util import is_complete_jpeg
+from printlapse.settings import normalize_settings
 from tests.support import Env, ensure_fake, wait_until
 
 

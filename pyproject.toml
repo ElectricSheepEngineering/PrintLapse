@@ -1,5 +1,5 @@
 [project]
-name = "prusa-timelapse"
+name = "printlapse"
 version = "0.1.0"
 description = "Grab frames from an RTSP camera on a timer and build a timelapse video."
 readme = "README.md"
@@ -9,15 +9,15 @@ requires-python = ">=3.9"
 dependencies = []
 
 [project.scripts]
-prusa-timelapse = "prusa_timelapse.__main__:main"
+printlapse = "printlapse.__main__:main"
 
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["prusa_timelapse*"]
+include = ["printlapse*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-prusa_timelapse = ["web/index.html", "web/favicon.svg"]
+printlapse = ["web/index.html", "web/favicon.svg"]

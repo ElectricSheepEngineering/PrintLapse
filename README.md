@@ -1,6 +1,6 @@
-# Prusa Timelapse
+# PrintLapse
 
-Prusa Timelapse grabs stills from an RTSP camera on a timer and turns them into a timelapse video. It is meant for a Prusa Buddy3D camera on a home network, and it works with any other RTSP URL.
+PrintLapse grabs stills from an RTSP camera on a timer and turns them into a timelapse video. It is meant for a Prusa Buddy3D camera on a home network, and it works with any other RTSP URL.
 
 One ffmpeg process stays connected and saves a JPEG at the interval you set. When the capture stops, ffmpeg builds an H.264 `.mp4`. The JPEGs stay in the session folder, so the video can be rebuilt at another frame rate without recording again.
 
@@ -28,7 +28,7 @@ sudo apt install ffmpeg
 From this directory:
 
 ```bash
-python3 -m prusa_timelapse
+python3 -m printlapse
 ```
 
 That opens `http://127.0.0.1:8765/`. Leave the terminal open while a capture is running. Closing the browser does not stop the capture. Closing the terminal does.
@@ -39,7 +39,7 @@ To put the command on your `PATH`:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-prusa-timelapse
+printlapse
 ```
 
 On Windows, activate the venv with `.venv\Scripts\activate`.
@@ -61,7 +61,7 @@ Then open `http://127.0.0.1:8765/`. On another machine on your LAN, use the Dock
 ### Portainer from Git
 
 1. Put this project in a Git repository the Portainer host can clone.
-2. In Portainer, open **Stacks** → **Add stack** and name it `prusa-timelapse`.
+2. In Portainer, open **Stacks** → **Add stack** and name it `printlapse`.
 3. Choose **Repository**. Set the repository URL and the compose path to `compose.yaml`.
 4. Deploy the stack. Portainer builds the image from the Dockerfile.
 
@@ -70,7 +70,7 @@ Then open `http://127.0.0.1:8765/`. On another machine on your LAN, use the Dock
 On the Docker host Portainer manages:
 
 ```bash
-docker build -t prusa-timelapse:latest .
+docker build -t printlapse:latest .
 ```
 
 In Portainer, **Add stack** → **Web editor**, paste `portainer-stack.yml`, and turn off **Pull latest image**. Deploy the stack.
@@ -106,7 +106,7 @@ The full URL, including a password, is stored in the settings file so the form c
 
 ## What gets saved
 
-Sessions go in `~/Prusa Timelapses/` unless you pick another folder. In Docker the default is `/data/timelapses`. Each session looks like this:
+Sessions go in `~/PrintLapse/` unless you pick another folder. In Docker the default is `/data/timelapses`. Each session looks like this:
 
 ```text
 print-20261104-153012/
@@ -130,9 +130,9 @@ The app will not delete a session that is still capturing or encoding. **Show fo
 ## Command line
 
 ```bash
-python3 -m prusa_timelapse test --url rtsp://192.168.1.42/live
-python3 -m prusa_timelapse capture --url rtsp://192.168.1.42/live --every 10 --fps 30
-python3 -m prusa_timelapse encode "~/Prusa Timelapses/print-20261104-153012" --fps 24
+python3 -m printlapse test --url rtsp://192.168.1.42/live
+python3 -m printlapse capture --url rtsp://192.168.1.42/live --every 10 --fps 30
+python3 -m printlapse encode "~/PrintLapse/print-20261104-153012" --fps 24
 ```
 
 `capture` runs until you press Ctrl+C, then builds the video. `--minutes 120` stops on its own. `--no-encode` leaves only the frames. `--delete-frames` removes the JPEGs after a successful encode.

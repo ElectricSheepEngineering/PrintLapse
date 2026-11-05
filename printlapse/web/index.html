@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Prusa Timelapse</title>
+  <title>PrintLapse</title>
   <link rel="icon" href="/favicon.svg">
   <style>
     :root {
@@ -143,7 +143,7 @@
           <rect x="12" y="5" width="18" height="22" rx="2" fill="none" stroke="#f4f0e6" stroke-width="2"/>
         </svg>
         <div>
-          <h1>Prusa Timelapse</h1>
+          <h1>PrintLapse</h1>
           <p class="lede">Grab frames from a Buddy3D camera, or any other RTSP source, and turn them into a timelapse.</p>
         </div>
       </div>
@@ -451,9 +451,9 @@
         img.hidden = false;
         $("placeholder").hidden = true;
       }
-      if (phase === "capturing") document.title = "(" + (status.frames || 0) + ") Prusa Timelapse";
-      else if (phase === "encoding") document.title = "Encoding… Prusa Timelapse";
-      else document.title = "Prusa Timelapse";
+      if (phase === "capturing") document.title = "(" + (status.frames || 0) + ") PrintLapse";
+      else if (phase === "encoding") document.title = "Encoding… PrintLapse";
+      else document.title = "PrintLapse";
       if (status.last_error && !openedLogForError) {
         $("logDetails").open = true;
         openedLogForError = true;

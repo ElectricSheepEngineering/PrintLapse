@@ -10,11 +10,11 @@ import time
 import webbrowser
 from pathlib import Path
 
-from prusa_timelapse import __version__
-from prusa_timelapse.capture import CaptureService, config_from_dict
-from prusa_timelapse.ffmpeg_util import validate_rtsp_url
-from prusa_timelapse.server import App, make_server
-from prusa_timelapse.settings import SettingsStore, app_config_dir, normalize_settings
+from printlapse import __version__
+from printlapse.capture import CaptureService, config_from_dict
+from printlapse.ffmpeg_util import validate_rtsp_url
+from printlapse.server import App, make_server
+from printlapse.settings import SettingsStore, app_config_dir, normalize_settings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -23,10 +23,10 @@ def main(argv: list[str] | None = None) -> int:
     if not argv:
         argv = ["gui"]
     parser = argparse.ArgumentParser(
-        prog="prusa-timelapse",
+        prog="printlapse",
         description="Grab frames from an RTSP camera on a timer and build a timelapse video.",
     )
-    parser.add_argument("--version", action="version", version=f"prusa-timelapse {__version__}")
+    parser.add_argument("--version", action="version", version=f"printlapse {__version__}")
     commands = parser.add_subparsers(dest="command")
 
     gui = commands.add_parser("gui", help="Open the local control page in a browser.")
@@ -96,10 +96,10 @@ def gui_main(args) -> int:
     display_host = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
     url = f"http://{display_host}:{bound}/"
     if host in {"0.0.0.0", "::"}:
-        print(f"Prusa Timelapse is listening on port {bound}.")
+        print(f"PrintLapse is listening on port {bound}.")
         print(f"On this machine: http://127.0.0.1:{bound}/")
     else:
-        print(f"Prusa Timelapse is at {url}")
+        print(f"PrintLapse is at {url}")
     print("Leave this process running while a capture is going. Closing it stops the capture.")
     if host not in {"127.0.0.1", "localhost", "::1"}:
         print("This server has no password. Anyone who can open that address can start a capture.")

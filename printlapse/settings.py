@@ -51,10 +51,10 @@ def default_settings() -> dict:
 def data_root() -> Path | None:
     """Directory that holds both settings and sessions, when one is configured.
 
-    Docker sets PRUSA_TIMELAPSE_DATA to the mounted volume. Left unset, the
+    Docker sets PRINTLAPSE_DATA to the mounted volume. Left unset, the
     desktop app keeps using the platform config folder and the home directory.
     """
-    raw = os.environ.get("PRUSA_TIMELAPSE_DATA", "").strip()
+    raw = os.environ.get("PRINTLAPSE_DATA", "").strip()
     if not raw:
         return None
     path = Path(raw).expanduser()
@@ -64,7 +64,7 @@ def data_root() -> Path | None:
         path = path.resolve()
         path.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
-        raise ValueError(f"Could not use PRUSA_TIMELAPSE_DATA: {exc}") from exc
+        raise ValueError(f"Could not use PRINTLAPSE_DATA: {exc}") from exc
     return path
 
 
@@ -75,13 +75,13 @@ def app_config_dir() -> Path:
     elif sys.platform == "win32":
         base_text = os.environ.get("APPDATA")
         base = Path(base_text) if base_text else Path.home() / "AppData" / "Roaming"
-        path = base / "prusa-timelapse"
+        path = base / "printlapse"
     elif sys.platform == "darwin":
-        path = Path.home() / "Library" / "Application Support" / "prusa-timelapse"
+        path = Path.home() / "Library" / "Application Support" / "printlapse"
     else:
         xdg = os.environ.get("XDG_CONFIG_HOME")
         base = Path(xdg) if xdg else Path.home() / ".config"
-        path = base / "prusa-timelapse"
+        path = base / "printlapse"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -92,7 +92,7 @@ def default_output_dir() -> Path:
         path = root / "timelapses"
         path.mkdir(parents=True, exist_ok=True)
         return path
-    return Path.home() / "Prusa Timelapses"
+    return Path.home() / "PrintLapse"
 
 
 def _reject_bool(value, label: str) -> None:

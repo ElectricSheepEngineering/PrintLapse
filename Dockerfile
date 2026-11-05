@@ -9,10 +9,10 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY pyproject.toml README.md ./
-COPY prusa_timelapse ./prusa_timelapse
+COPY printlapse ./printlapse
 RUN pip install --no-cache-dir .
 
-ENV PRUSA_TIMELAPSE_DATA=/data \
+ENV PRINTLAPSE_DATA=/data \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -25,4 +25,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 # Listen on every interface so a published port reaches the app.
 # There is no browser inside the container.
-CMD ["prusa-timelapse", "gui", "--host", "0.0.0.0", "--port", "8765", "--no-browser"]
+CMD ["printlapse", "gui", "--host", "0.0.0.0", "--port", "8765", "--no-browser"]

@@ -12,14 +12,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from prusa_timelapse.capture import (
+from printlapse.capture import (
     BusyError,
     config_from_dict,
     list_sessions,
     resolve_session,
 )
-from prusa_timelapse.ffmpeg_util import validate_rtsp_url
-from prusa_timelapse.library import (
+from printlapse.ffmpeg_util import validate_rtsp_url
+from printlapse.library import (
     contained_file,
     delete_stored,
     download_filename,
@@ -30,7 +30,7 @@ from prusa_timelapse.library import (
     write_zip,
     zip_members,
 )
-from prusa_timelapse.settings import (
+from printlapse.settings import (
     data_root,
     default_output_dir,
     expand_output_dir,

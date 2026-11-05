@@ -17,10 +17,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prusa_timelapse.__main__ import main
-from prusa_timelapse.capture import CaptureService
-from prusa_timelapse.server import App, make_server
-from prusa_timelapse.settings import SettingsStore
+from printlapse.__main__ import main
+from printlapse.capture import CaptureService
+from printlapse.server import App, make_server
+from printlapse.settings import SettingsStore
 from tests.fake_ffmpeg import make_jpeg
 from tests.support import Env, ensure_fake, wait_until
 
@@ -103,7 +103,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn("Buddy3D", text)
         self.assertIn("/live", text)
-        self.assertIn("Prusa Timelapse", text)
+        self.assertIn("PrintLapse", text)
         self.assertIn("Saved files", text)
         self.assertIn("Frames + video", text)
 

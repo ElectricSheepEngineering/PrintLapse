@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from prusa_timelapse.ffmpeg_util import (
+from printlapse.ffmpeg_util import (
     build_capture_args,
     build_encode_args,
     build_snapshot_args,

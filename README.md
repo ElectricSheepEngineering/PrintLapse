@@ -159,4 +159,4 @@ python3 -m unittest discover -s tests -v
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Replace `<copyright holder>` in that file with the name you want on the copyright line.
+MIT. See [LICENSE](LICENSE).
